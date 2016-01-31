@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/coreos/etcd/client"
 	"github.com/coreos/etcd/pkg/transport"
@@ -30,7 +31,8 @@ func New(endpoints string) (*Etcd, error) {
 		eps[i] = u.String()
 	}
 
-	tr, e := transport.NewTransport(transport.TLSInfo{})
+	tr, e := transport.NewTransport(transport.TLSInfo{},
+		10*time.Second) // timeout = 10sec
 	if e != nil {
 		return nil, fmt.Errorf("transport.NewTransport: %v", e)
 	}
