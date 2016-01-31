@@ -2,8 +2,13 @@ package etcd
 
 import (
 	"flag"
-	"fmt"
+	"log"
+	"os/exec"
+	"path"
 	"testing"
+	"time"
+
+	. "github.com/topicai/candy"
 )
 
 func ExampleNew() {
@@ -18,19 +23,20 @@ func ExampleNew() {
 	c.Rmdir("/home")
 }
 
-var (
-	testEtcd = flag.String("testEtcd", "", "If non-empty, run tests.  An example is \"http://127.0.0.1:4001,http://127.0.0.1:2379\"")
-)
-
-func TestEtcd(t *testing.T) {
-	if *testEtcd == "" {
-		fmt.Println("Test doesn't run without specifying testEtcd")
-		return
+func init() {
+	// Build and run etcd.
+	buf, e := exec.Command("go", "get", "github.com/coreos/etcd/...").CombinedOutput()
+	if e != nil {
+		log.Panicf("Failed go get github.com/coreos/etcd/... : %v\n%s", e, buf)
 	}
 
-	fmt.Println("Testing using etcd listening on ", *testEtcd)
+	go Must(exec.Command(path.Join(GoPath(), "bin/etcd")).Start())
+}
 
-	if c, e := New(*testEtcd); e != nil {
+func TestEtcd(t *testing.T) {
+	time.Sleep(2 * time.Second) // Wait 2 seconds for etcd to get ready to serve.
+
+	if c, e := New("http://127.0.0.1:4001,http://127.0.0.1:2379"); e != nil {
 		t.Error(e)
 	} else {
 		c.Rmdir("/home/yi")
