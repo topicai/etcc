@@ -18,7 +18,9 @@ func ExampleNew() {
 	c.Rmdir("/home")
 }
 
-var testEtcd = flag.String("testEtcd", "", "If non-empty, run tests.  An example is \"http://127.0.0.1:4001,http://127.0.0.1:2379\"")
+var (
+	testEtcd = flag.String("testEtcd", "", "If non-empty, run tests.  An example is \"http://127.0.0.1:4001,http://127.0.0.1:2379\"")
+)
 
 func TestEtcd(t *testing.T) {
 	if *testEtcd == "" {
