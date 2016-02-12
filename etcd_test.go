@@ -2,8 +2,12 @@ package etcd
 
 import (
 	"flag"
-	"fmt"
+	"os"
 	"testing"
+	"time"
+
+	"github.com/coreos/etcd/etcdmain"
+	"github.com/stretchr/testify/assert"
 )
 
 func ExampleNew() {
@@ -18,47 +22,36 @@ func ExampleNew() {
 	c.Rmdir("/home")
 }
 
-var (
-	testEtcd = flag.String("testEtcd", "", "If non-empty, run tests.  An example is \"http://127.0.0.1:4001,http://127.0.0.1:2379\"")
-)
+func init() {
+	os.Args = os.Args[0:1]
+	go etcdmain.Main()
+	time.Sleep(3 * time.Second) // NOTE: Give etcd 3 seconds to start before connecting to it.
+}
 
 func TestEtcd(t *testing.T) {
-	if *testEtcd == "" {
-		fmt.Println("Test doesn't run without specifying testEtcd")
-		return
-	}
+	assert := assert.New(t)
 
-	fmt.Println("Testing using etcd listening on ", *testEtcd)
+	c, e := New("http://localhost:4001,http://localhost:2379")
+	assert.Nil(e)
 
-	if c, e := New(*testEtcd); e != nil {
-		t.Error(e)
-	} else {
-		c.Rmdir("/home/yi")
-		if e := c.Mkdir("/home/yi"); e != nil {
-			t.Error(e)
-		}
-		if e := c.Set("/home/yi/a", "Apple"); e != nil {
-			t.Error(e)
-		}
-		if e := c.Set("/home/yi/b", "Banana"); e != nil {
-			t.Error(e)
-		}
-		if r, e := c.Get("/home/yi/a"); e != nil || r != "Apple" {
-			t.Error(e)
-		}
-		if r, e := c.Get("home/yi/b"); e != nil || r != "Banana" {
-			t.Error(e)
-		}
+	c.Rmdir("/home/yi")
 
-		if e := c.Set("/home/yi/a", "Aloha"); e != nil {
-			t.Error(e)
-		}
-		if r, e := c.Get("/home/yi/a"); e != nil || r != "Aloha" {
-			t.Error(e)
-		}
+	assert.Nil(c.Mkdir("/home/yi"))
+	assert.Nil(c.Set("/home/yi/a", "Apple"))
+	assert.Nil(c.Set("/home/yi/b", "Banana"))
 
-		if e := c.Rmdir("/home"); e != nil {
-			t.Error(e)
-		}
-	}
+	r, e := c.Get("/home/yi/a")
+	assert.Nil(e)
+	assert.Equal("Apple", r)
+
+	r, e = c.Get("home/yi/b")
+	assert.Nil(e)
+	assert.Equal("Banana", r)
+
+	assert.Nil(c.Set("/home/yi/a", "Aloha"))
+	r, e = c.Get("/home/yi/a")
+	assert.Nil(e)
+	assert.Equal("Aloha", r)
+
+	assert.Nil(c.Rmdir("/home"))
 }
