@@ -1,5 +1,7 @@
 # `etcd`
 
+[![Build Status](https://travis-ci.org/wangkuiyi/etcd.svg?branch=master)](https://travis-ci.org/wangkuiyi/etcd)
+
 The official etcd Go client library is far from easy-to-use. I had to
 read `github.com/coreos/etcd/client` and
 `github.com/coreos/etcd/etcdctl` before I can write this higher-level

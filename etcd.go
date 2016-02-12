@@ -87,7 +87,7 @@ func (c *Etcd) Get(key string) (string, error) {
 func (c *Etcd) Rmdir(dir string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
 	defer cancel()
-	if _, e := c.api.Delete(ctx, "/home", &client.DeleteOptions{Dir: true, Recursive: true}); e != nil {
+	if _, e := c.api.Delete(ctx, dir, &client.DeleteOptions{Dir: true, Recursive: true}); e != nil {
 		return fmt.Errorf("Etcd.Rmdir: %v", e)
 	}
 	return nil
