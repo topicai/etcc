@@ -64,13 +64,17 @@ func (c *Etcd) Mkdir(dir string) error {
 	return nil
 }
 
-func (c *Etcd) Set(key, value string) error {
+func (c *Etcd) SetWithTTL(key, value string, ttl time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
 	defer cancel()
-	if _, e := c.api.Set(ctx, key, value, &client.SetOptions{}); e != nil {
+	if _, e := c.api.Set(ctx, key, value, &client.SetOptions{TTL: ttl}); e != nil {
 		return fmt.Errorf("Etcd.Set: %v", e)
 	}
 	return nil
+}
+
+func (c *Etcd) Set(key, value string) error {
+	return c.SetWithTTL(key, value, time.Duration(0))
 }
 
 func (c *Etcd) Get(key string) (string, error) {
