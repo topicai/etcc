@@ -23,7 +23,7 @@ func ExampleNew() {
 }
 
 func init() {
-	os.Args = os.Args[0:1]
+	os.Args = os.Args[0:1] // Make etcdmain.Main parse and get all-default settings.
 	go etcdmain.Main()
 	time.Sleep(3 * time.Second) // NOTE: Give etcd 3 seconds to start before connecting to it.
 }
