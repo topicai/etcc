@@ -37,6 +37,8 @@ func TestEtcd(t *testing.T) {
 	c.Rmdir("/home/yi")
 
 	assert.Nil(c.Mkdir("/home/yi"))
+	assert.NotNil(c.Mkdir("/home/yi"))
+
 	assert.Nil(c.Set("/home/yi/a", "Apple"))
 	assert.Nil(c.Set("/home/yi/b", "Banana"))
 
