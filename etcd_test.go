@@ -77,7 +77,7 @@ func TestSetWithTTL(t *testing.T) {
 	// NOTE: it seems that etcd doesn't keep TTL exactly, if we
 	// wait for exactly the TTL time (1000 * timeMillisecond in
 	// this case), we might find the key-value pair still there.
-	time.Sleep(1100 * time.Millisecond)
+	time.Sleep(1500 * time.Millisecond)
 	r, e = c.Get("key-ttl")
 	assert.NotNil(e)
 	assert.Equal("", r)
