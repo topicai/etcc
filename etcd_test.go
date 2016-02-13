@@ -105,10 +105,12 @@ func TestLs(t *testing.T) {
 	}
 
 	assert.Nil(c.Mkdir("home/yi/b"))
+	assert.Nil(c.Rm("/home/yi/a"))
 	{
 		ns, e := c.Ls("/home/yi")
 		assert.Nil(e)
-		assert.Equal(2, len(ns))
+		assert.Equal(1, len(ns))
+		assert.Equal("/home/yi/b", ns[0])
 	}
 
 	assert.Nil(c.Rm("/home"))
