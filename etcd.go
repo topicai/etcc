@@ -1,4 +1,4 @@
-package etcd
+package etcc
 
 import (
 	"fmt"
