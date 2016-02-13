@@ -20,7 +20,7 @@ func ExampleNew() {
 	c.Set("/home/yi/b", "Banana")
 	c.Get("/home/yi/a")
 	c.Get("home/yi/b")
-	c.Rmdir("/home")
+	c.Rm("/home")
 }
 
 var (
@@ -41,7 +41,7 @@ func init() {
 func TestEtcdBasicSession(t *testing.T) {
 	assert := assert.New(t)
 
-	c.Rmdir("/home/yi")
+	c.Rm("/home/yi")
 
 	assert.Nil(c.Mkdir("/home/yi"))
 	assert.NotNil(c.Mkdir("/home/yi"))
@@ -62,7 +62,7 @@ func TestEtcdBasicSession(t *testing.T) {
 	assert.Nil(e)
 	assert.Equal("Aloha", r)
 
-	assert.Nil(c.Rmdir("/home"))
+	assert.Nil(c.Rm("/home"))
 }
 
 func TestSetWithTTL(t *testing.T) {
@@ -77,8 +77,39 @@ func TestSetWithTTL(t *testing.T) {
 	// NOTE: it seems that etcd doesn't keep TTL exactly, if we
 	// wait for exactly the TTL time (1000 * timeMillisecond in
 	// this case), we might find the key-value pair still there.
-	time.Sleep(1100 * time.Millisecond)
+	time.Sleep(1500 * time.Millisecond)
 	r, e = c.Get("key-ttl")
 	assert.NotNil(e)
 	assert.Equal("", r)
+}
+
+func TestLs(t *testing.T) {
+	assert := assert.New(t)
+
+	c.Rm("/home/yi")
+
+	assert.Nil(c.Mkdir("/home/yi"))
+	{
+		ns, e := c.Ls("")
+		assert.Nil(e)
+		assert.Equal(1, len(ns))
+		assert.Equal("/home", ns[0])
+	}
+
+	assert.Nil(c.Set("/home/yi/a", "Apple"))
+	{
+		ns, e := c.Ls("/home/yi")
+		assert.Nil(e)
+		assert.Equal(1, len(ns))
+		assert.Equal("/home/yi/a", ns[0])
+	}
+
+	assert.Nil(c.Mkdir("home/yi/b"))
+	{
+		ns, e := c.Ls("/home/yi")
+		assert.Nil(e)
+		assert.Equal(2, len(ns))
+	}
+
+	assert.Nil(c.Rm("/home"))
 }

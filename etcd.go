@@ -31,46 +31,45 @@ func New(endpoints string) (*Etcd, error) {
 		eps[i] = u.String()
 	}
 
-	tr, e := transport.NewTransport(transport.TLSInfo{},
-		10*time.Second) // timeout = 10sec
+	tr, e := transport.NewTransport(transport.TLSInfo{}, 10*time.Second)
 	if e != nil {
-		return nil, fmt.Errorf("transport.NewTransport: %v", e)
+		return nil, e
 	}
 
 	c, e := client.New(client.Config{Endpoints: eps, Transport: tr})
 	if e != nil {
-		return nil, fmt.Errorf("client.New: %v", e)
+		return nil, e
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
+	ctx, cancel := timeoutContext()
 	e = c.Sync(ctx)
 	cancel()
 	if e != nil {
-		return nil, fmt.Errorf("(etc)client.Sync: %v", e)
+		return nil, e
 	}
 
 	return &Etcd{client.NewKeysAPI(c)}, nil
+}
+
+func timeoutContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
 }
 
 // Mkdir creates a directory. The directory could be multiple-level,
 // like /home/yi/hello. But it must not exist before; otherwise Mkdir
 // returns an error.
 func (c *Etcd) Mkdir(dir string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
+	ctx, cancel := timeoutContext()
 	defer cancel()
-	if _, e := c.api.Set(ctx, dir, "", &client.SetOptions{Dir: true, PrevExist: client.PrevNoExist}); e != nil {
-		return fmt.Errorf("Etcd.Mkdir: %v", e)
-	}
-	return nil
+	_, e := c.api.Set(ctx, dir, "", &client.SetOptions{Dir: true, PrevExist: client.PrevNoExist})
+	return e
 }
 
 func (c *Etcd) SetWithTTL(key, value string, ttl time.Duration) error {
-	ctx, cancel := context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
+	ctx, cancel := timeoutContext()
 	defer cancel()
-	if _, e := c.api.Set(ctx, key, value, &client.SetOptions{TTL: ttl}); e != nil {
-		return fmt.Errorf("Etcd.Set: %v", e)
-	}
-	return nil
+	_, e := c.api.Set(ctx, key, value, &client.SetOptions{TTL: ttl})
+	return e
 }
 
 func (c *Etcd) Set(key, value string) error {
@@ -78,21 +77,45 @@ func (c *Etcd) Set(key, value string) error {
 }
 
 func (c *Etcd) Get(key string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
+	ctx, cancel := timeoutContext()
 	defer cancel()
 	r, e := c.api.Get(ctx, key, &client.GetOptions{Sort: true})
 	if e != nil {
-		return "", fmt.Errorf("Etcd.Get: %v", e)
+		return "", e
 	}
 	return r.Node.Value, nil
 }
 
-// Rmdir removes a directory and recursively its all content, like bash command `rm -rf`.
-func (c *Etcd) Rmdir(dir string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
+// Rm removes a either a key-value pair or a directory.  If it is a
+// directory, Rm removes all recursive content as well.
+func (c *Etcd) Rm(key string) error {
+	ctx, cancel := timeoutContext()
 	defer cancel()
-	if _, e := c.api.Delete(ctx, dir, &client.DeleteOptions{Dir: true, Recursive: true}); e != nil {
-		return fmt.Errorf("Etcd.Rmdir: %v", e)
+	_, e := c.api.Delete(ctx, key, &client.DeleteOptions{Recursive: true})
+	return e
+}
+
+func (c *Etcd) Ls(key string) ([]string, error) {
+	if len(key) == 0 {
+		key = "/"
 	}
-	return nil
+
+	ctx, cancel := timeoutContext()
+	defer cancel()
+
+	resp, e := c.api.Get(ctx, key, &client.GetOptions{Sort: false, Recursive: false, Quorum: true})
+
+	if e != nil {
+		return nil, e
+	}
+
+	if !resp.Node.Dir {
+		return []string{resp.Node.Key}, nil
+	}
+
+	var keys []string
+	for _, node := range resp.Node.Nodes {
+		keys = append(keys, node.Key)
+	}
+	return keys, e
 }
