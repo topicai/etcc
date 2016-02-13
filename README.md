@@ -1,4 +1,4 @@
-# `etcd`
+# `etcc`
 
 [![Build Status](https://travis-ci.org/topicai/etcc.svg?branch=master)](https://travis-ci.org/topicai/etcc)
 
