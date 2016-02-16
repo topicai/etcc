@@ -20,11 +20,11 @@ func ExampleNew() {
 	c.Set("/home/yi/b", "Banana")
 	c.Get("/home/yi/a")
 	c.Get("home/yi/b")
-	c.Rmdir("/home")
+	c.Rm("/home")
 }
 
 var (
-	c *Etcd
+	c *Etcc
 )
 
 func init() {
@@ -38,10 +38,10 @@ func init() {
 	Must(e)
 }
 
-func TestEtcdBasicSession(t *testing.T) {
+func TestEtccBasicSession(t *testing.T) {
 	assert := assert.New(t)
 
-	c.Rmdir("/home/yi")
+	c.Rm("/home/yi")
 
 	assert.Nil(c.Mkdir("/home/yi"))
 	assert.NotNil(c.Mkdir("/home/yi"))
@@ -62,7 +62,7 @@ func TestEtcdBasicSession(t *testing.T) {
 	assert.Nil(e)
 	assert.Equal("Aloha", r)
 
-	assert.Nil(c.Rmdir("/home"))
+	assert.Nil(c.Rm("/home"))
 }
 
 func TestSetWithTTL(t *testing.T) {
@@ -81,4 +81,37 @@ func TestSetWithTTL(t *testing.T) {
 	r, e = c.Get("key-ttl")
 	assert.NotNil(e)
 	assert.Equal("", r)
+}
+
+func TestLs(t *testing.T) {
+	assert := assert.New(t)
+
+	c.Rm("/home/yi")
+
+	assert.Nil(c.Mkdir("/home/yi"))
+	{
+		ns, e := c.Ls("")
+		assert.Nil(e)
+		assert.Equal(1, len(ns))
+		assert.Equal("/home", ns[0])
+	}
+
+	assert.Nil(c.Set("/home/yi/a", "Apple"))
+	{
+		ns, e := c.Ls("/home/yi")
+		assert.Nil(e)
+		assert.Equal(1, len(ns))
+		assert.Equal("/home/yi/a", ns[0])
+	}
+
+	assert.Nil(c.Mkdir("home/yi/b"))
+	assert.Nil(c.Rm("/home/yi/a"))
+	{
+		ns, e := c.Ls("/home/yi")
+		assert.Nil(e)
+		assert.Equal(1, len(ns))
+		assert.Equal("/home/yi/b", ns[0])
+	}
+
+	assert.Nil(c.Rm("/home"))
 }
