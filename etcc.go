@@ -95,6 +95,10 @@ func (c *Etcd) Rm(key string) error {
 	return e
 }
 
+// Ls returns a list if key is a directory, or the key itself
+// otherwise.  Ls uses quorum=true read.  For more about what does
+// quorum=true mean, please refer to
+// https://github.com/philips/etcd/blob/05bfb369ef1a8d6c56c9eed7e1ec972dccb25492/Documentation/api.md#read-linearization
 func (c *Etcd) Ls(key string) ([]string, error) {
 	if len(key) == 0 {
 		key = "/"
