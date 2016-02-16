@@ -24,7 +24,7 @@ func ExampleNew() {
 }
 
 var (
-	c *Etcd
+	c *Etcc
 )
 
 func init() {
@@ -38,7 +38,7 @@ func init() {
 	Must(e)
 }
 
-func TestEtcdBasicSession(t *testing.T) {
+func TestEtccBasicSession(t *testing.T) {
 	assert := assert.New(t)
 
 	c.Rm("/home/yi")

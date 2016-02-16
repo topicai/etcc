@@ -11,13 +11,13 @@ import (
 	"golang.org/x/net/context"
 )
 
-type Etcd struct {
+type Etcc struct {
 	api client.KeysAPI
 }
 
 // New trys to connect to etcd server.  endpoints must be addreses
 // delimited by comma, like "http://127.0.0.1:4001,http://127.0.0.1:2379".
-func New(endpoints string) (*Etcd, error) {
+func New(endpoints string) (*Etcc, error) {
 	eps := strings.Split(endpoints, ",")
 	for i, ep := range eps {
 		u, e := url.Parse(ep)
@@ -48,7 +48,7 @@ func New(endpoints string) (*Etcd, error) {
 		return nil, e
 	}
 
-	return &Etcd{client.NewKeysAPI(c)}, nil
+	return &Etcc{client.NewKeysAPI(c)}, nil
 }
 
 func timeoutContext() (context.Context, context.CancelFunc) {
@@ -58,25 +58,25 @@ func timeoutContext() (context.Context, context.CancelFunc) {
 // Mkdir creates a directory. The directory could be multiple-level,
 // like /home/yi/hello. But it must not exist before; otherwise Mkdir
 // returns an error.
-func (c *Etcd) Mkdir(dir string) error {
+func (c *Etcc) Mkdir(dir string) error {
 	ctx, cancel := timeoutContext()
 	defer cancel()
 	_, e := c.api.Set(ctx, dir, "", &client.SetOptions{Dir: true, PrevExist: client.PrevNoExist})
 	return e
 }
 
-func (c *Etcd) SetWithTTL(key, value string, ttl time.Duration) error {
+func (c *Etcc) SetWithTTL(key, value string, ttl time.Duration) error {
 	ctx, cancel := timeoutContext()
 	defer cancel()
 	_, e := c.api.Set(ctx, key, value, &client.SetOptions{TTL: ttl})
 	return e
 }
 
-func (c *Etcd) Set(key, value string) error {
+func (c *Etcc) Set(key, value string) error {
 	return c.SetWithTTL(key, value, time.Duration(0))
 }
 
-func (c *Etcd) Get(key string) (string, error) {
+func (c *Etcc) Get(key string) (string, error) {
 	ctx, cancel := timeoutContext()
 	defer cancel()
 	r, e := c.api.Get(ctx, key, &client.GetOptions{Sort: true})
@@ -88,7 +88,7 @@ func (c *Etcd) Get(key string) (string, error) {
 
 // Rm removes a either a key-value pair or a directory.  If it is a
 // directory, Rm removes all recursive content as well.
-func (c *Etcd) Rm(key string) error {
+func (c *Etcc) Rm(key string) error {
 	ctx, cancel := timeoutContext()
 	defer cancel()
 	_, e := c.api.Delete(ctx, key, &client.DeleteOptions{Recursive: true})
@@ -99,7 +99,7 @@ func (c *Etcd) Rm(key string) error {
 // otherwise.  Ls uses quorum=true read.  For more about what does
 // quorum=true mean, please refer to
 // https://github.com/philips/etcd/blob/05bfb369ef1a8d6c56c9eed7e1ec972dccb25492/Documentation/api.md#read-linearization
-func (c *Etcd) Ls(key string) ([]string, error) {
+func (c *Etcc) Ls(key string) ([]string, error) {
 	if len(key) == 0 {
 		key = "/"
 	}
